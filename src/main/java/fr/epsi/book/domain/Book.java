@@ -1,31 +1,26 @@
 package fr.epsi.book.domain;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @XmlRootElement
 public class Book implements Serializable {
 	
-	private String id;
+	private Long id;
 	private String code;
-	private Map<String, Contact> contacts;
+	private Map<Long, Contact> contacts;
 	
 	public Book() {
-		id = UUID.randomUUID().toString();
 		contacts = new HashMap<>(  );
 	}
 	
-	public String getId() {
+	public Long getId() {
 		return id;
 	}
 	
-	public void setId( String id ) {
+	public void setId( Long id ) {
 		this.id = id;
 	}
 	
@@ -37,11 +32,11 @@ public class Book implements Serializable {
 		this.code = code;
 	}
 	
-	public Map<String, Contact> getContacts() {
+	public Map<Long, Contact> getContacts() {
 		return contacts;
 	}
 	
-	public void setContacts( Map<String, Contact> contacts ) {
+	public void setContacts( Map<Long, Contact> contacts ) {
 		this.contacts = contacts;
 	}
 	
@@ -53,7 +48,7 @@ public class Book implements Serializable {
 		contacts.remove( contact.getId() );
 	}
 	
-	public void removeContact( String id ) {
+	public void removeContact( Long id ) {
 		contacts.remove( id );
 	}
 }

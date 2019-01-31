@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<book>
+    <contacts>
+        <entry>
+            <key>441b11a2-3d20-42b3-ae91-7cc025ee87d1</key>
+            <value>
+                <email>loooo</email>
+                <id>441b11a2-3d20-42b3-ae91-7cc025ee87d1</id>
+                <name>louka</name>
+                <phone>154234</phone>
+                <type>PERSO</type>
+            </value>
+        </entry>
+    </contacts>
+    <id>aea845d9-0606-4e77-b751-c613a48c8665</id>
+</book>

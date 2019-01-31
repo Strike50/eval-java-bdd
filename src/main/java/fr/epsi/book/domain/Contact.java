@@ -7,21 +7,20 @@ import java.util.UUID;
 @XmlType
 public class Contact implements Serializable {
 	
-	private String id;
+	private Long id;
 	private String name;
 	private String email;
 	private String phone;
 	private Type type;
+	private Book book;
 	
-	public Contact() {
-		id = UUID.randomUUID().toString();
-	}
+	public Contact() {	}
 	
-	public String getId() {
+	public Long getId() {
 		return id;
 	}
 	
-	public void setId( String id ) {
+	public void setId( Long id ) {
 		this.id = id;
 	}
 	
@@ -55,6 +54,14 @@ public class Contact implements Serializable {
 	
 	public void setType( Type type ) {
 		this.type = type;
+	}
+
+	public Book getBook() {
+		return book;
+	}
+
+	public void setBook(Book book) {
+		this.book = book;
 	}
 	
 	@Override

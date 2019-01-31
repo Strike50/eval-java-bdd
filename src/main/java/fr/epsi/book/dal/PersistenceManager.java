@@ -6,9 +6,9 @@ import java.sql.SQLException;
 
 public class PersistenceManager {
 	
-	private static final String DB_URL = "jdbc:mysql://localhost:3306/a_definir?useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC";
-	private static final String DB_LOGIN = "a_definir";
-	private static final String DB_PWD = "a_definir";
+	private static final String DB_URL = "jdbc:mysql://localhost:3306/cours_java?useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC";
+	private static final String DB_LOGIN = "root";
+	private static final String DB_PWD = "";
 	
 	private static Connection connection;
 	
