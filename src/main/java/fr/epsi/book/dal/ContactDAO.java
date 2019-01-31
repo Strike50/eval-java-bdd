@@ -9,12 +9,12 @@ import java.util.List;
 
 public class ContactDAO implements IDAO<Contact, Long> {
 	
-	private static final String INSERT_QUERY = "INSERT INTO contact (name, email, telephone, type_var, type_num, book_id) values (?,?,?,?,?,?)";
-	private static final String FIND_BY_ID_QUERY = "SELECT * from contact where id=?";
-	private static final String FIND_ALL_QUERY = "SELECT * from contact";
-	private static final String FIND_BY_BOOK_ID_QUERY = "SELECT * from contact where book_id=?";
-	private static final String UPDATE_QUERY = "UPDATE contact SET name=?, email=?, phone=?, type_var=?, type_num=? where id=?";
-	private static final String DELETE_QUERY = "DELETE FROM contact where id = ?";
+	private static final String INSERT_QUERY = "INSERT INTO CONTACT (name, email, telephone, type_var, type_num, book_id) VALUES (?,?,?,?,?,?)";
+	private static final String FIND_BY_ID_QUERY = "SELECT * FROM CONTACT WHERE id=?";
+	private static final String FIND_ALL_QUERY = "SELECT * FROM CONTACT";
+	private static final String FIND_BY_BOOK_ID_QUERY = "SELECT * FROM CONTACT WHERE book_id=?";
+	private static final String UPDATE_QUERY = "UPDATE CONTACT SET name=?, email=?, telephone=? WHERE id=?";
+	private static final String DELETE_QUERY = "DELETE FROM CONTACT WHERE id = ?";
 	
 	@Override
 	public void create( Contact c ) throws SQLException {
@@ -32,6 +32,8 @@ public class ContactDAO implements IDAO<Contact, Long> {
 		if ( rs.next() ) {
 			c.setId( rs.getLong( 1 ) );
 		}
+		st.close();
+		rs.close();
 	}
 	
 	@Override
@@ -41,8 +43,9 @@ public class ContactDAO implements IDAO<Contact, Long> {
 		PreparedStatement st = connection.prepareStatement(FIND_BY_ID_QUERY);
 		st.setLong(1, aLong);
 		ResultSet rs = st.executeQuery();
-		while(rs.next()){
-			Contact contact = new Contact();
+		Contact contact = null;
+		if(rs.next()){
+			contact = new Contact();
 			contact.setName(rs.getString("name"));
 			contact.setId(aLong);
 			contact.setEmail(rs.getString("email"));
@@ -54,9 +57,10 @@ public class ContactDAO implements IDAO<Contact, Long> {
 			}
 			Book book = bookDAO.findById(rs.getLong("book_id"));
 			contact.setBook(book);
-			return contact;
 		}
-		return null;
+		st.close();
+		rs.close();
+		return contact;
 	}
 	
 	@Override
@@ -81,6 +85,8 @@ public class ContactDAO implements IDAO<Contact, Long> {
 			contact.setBook(book);
 			list.add(contact);
 		}
+		st.close();
+		rs.close();
 		return list;
 	}
 
@@ -94,7 +100,7 @@ public class ContactDAO implements IDAO<Contact, Long> {
 		while(rs.next()){
 			Contact contact = new Contact();
 			contact.setName(rs.getString("name"));
-			contact.setId(aLong);
+			contact.setId(rs.getLong("id"));
 			contact.setEmail(rs.getString("email"));
 			contact.setPhone(rs.getString("telephone"));
 			if(rs.getString("type_var").equals("Perso")){
@@ -106,6 +112,8 @@ public class ContactDAO implements IDAO<Contact, Long> {
 			contact.setBook(book);
 			list.add(contact);
 		}
+		st.close();
+		rs.close();
 		return list;
 	}
 	
@@ -116,10 +124,9 @@ public class ContactDAO implements IDAO<Contact, Long> {
 		st.setString(1,o.getName());
 		st.setString(2,o.getEmail());
 		st.setString(3,o.getPhone());
-		st.setString(4,o.getType().getValue());
-		st.setInt(5,o.getType().ordinal());
-		st.setLong(6,o.getId());
-		st.executeQuery();
+		st.setLong(4,o.getId());
+		st.executeUpdate();
+		st.close();
 		return o;
 	}
 	
@@ -128,7 +135,8 @@ public class ContactDAO implements IDAO<Contact, Long> {
 		Connection connection = PersistenceManager.getConnection();
 		PreparedStatement st = connection.prepareStatement(DELETE_QUERY);
 		st.setLong(1,o.getId());
-		st.executeQuery();
+		st.executeUpdate();
+		st.close();
 	}
 }
 

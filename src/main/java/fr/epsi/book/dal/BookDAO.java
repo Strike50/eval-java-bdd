@@ -25,6 +25,8 @@ public class BookDAO implements IDAO<Book, Long> {
 		if ( rs.next() ) {
 			o.setId( rs.getLong( 1 ) );
 		}
+		rs.close();
+		st.close();
 	}
 	
 	@Override
@@ -33,13 +35,15 @@ public class BookDAO implements IDAO<Book, Long> {
 		PreparedStatement st = connection.prepareStatement(FIND_BY_ID_QUERY);
 		st.setLong(1, aLong);
 		ResultSet rs = st.executeQuery();
-		while(rs.next()){
-			Book book = new Book();
+		Book book = null;
+		if(rs.next()) {
+			book = new Book();
 			book.setId(aLong);
 			book.setCode(rs.getString("code"));
-			return book;
 		}
-		return null;
+		st.close();
+		rs.close();
+		return book;
 	}
 	
 	@Override
@@ -54,6 +58,8 @@ public class BookDAO implements IDAO<Book, Long> {
 			book.setCode(rs.getString("code"));
 			list.add(book);
 		}
+		rs.close();
+		st.close();
 		return list;
 	}
 	
@@ -63,7 +69,8 @@ public class BookDAO implements IDAO<Book, Long> {
 		PreparedStatement st = connection.prepareStatement(UPDATE_QUERY);
 		st.setString(1,o.getCode());
 		st.setLong(2,o.getId());
-		st.executeQuery();
+		st.executeUpdate();
+		st.close();
 		return o;
 	}
 	
@@ -72,6 +79,7 @@ public class BookDAO implements IDAO<Book, Long> {
 		Connection connection = PersistenceManager.getConnection();
 		PreparedStatement st = connection.prepareStatement(DELETE_QUERY);
 		st.setLong(1,o.getId());
-		st.executeQuery();
+		st.executeUpdate();
+		st.close();
 	}
 }

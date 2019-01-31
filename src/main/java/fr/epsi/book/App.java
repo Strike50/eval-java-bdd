@@ -2,6 +2,7 @@ package fr.epsi.book;
 
 import fr.epsi.book.dal.BookDAO;
 import fr.epsi.book.dal.ContactDAO;
+import fr.epsi.book.dal.PersistenceManager;
 import fr.epsi.book.domain.Book;
 import fr.epsi.book.domain.Contact;
 
@@ -10,6 +11,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -113,16 +115,18 @@ public class App {
         System.out.println( "**********************************************" );
         System.out.println( "***********Suppression d'un contact***********" );
         dspContacts( false );
-        System.out.print( "Entrer l'identifiant du contact : " );
-        Long id = sc.nextLong();
-        sc.nextLine();
-        Contact contact = book.getContacts().remove( id );
-        if ( null == contact ) {
-            System.out.println( "Aucun contact trouvé avec cet identifiant ..." );
-        } else {
-            contactDAO.remove(contact);
-            System.out.println( "Le contact a bien été supprimé ..." );
-        }
+        Long id;
+        Contact contact = null;
+        do {
+            System.out.println();
+            System.out.print("\nEntrer l'identifiant du carnet que vous voulez afficher : ");
+            id = sc.nextLong();
+            sc.nextLine();
+            contact = contactDAO.findById(id);
+        }while(contact == null);
+        contactDAO.remove(contact);
+        book.getContacts().remove( id );
+        System.out.println( "Le contact a bien été supprimé ..." );
     }
 
     private static void sort() {
@@ -190,27 +194,27 @@ public class App {
             .getEmail() + "\t\t\t\t" + contact.getPhone() + "\t\t\t\t" + contact.getType() );
     }
 
-    private static void dspContacts(boolean dspHeader) {
+    private static void dspContacts(boolean dspHeader) throws SQLException {
         if ( dspHeader ) {
             System.out.println( "***************************************" );
             System.out.println( "*********Liste de vos contacts*********" );
         }
-        for ( Map.Entry<Long, Contact> entry : book.getContacts().entrySet() ) {
-            dspContact( entry.getValue() );
+        for (Contact contact : contactDAO.findByBookId(book.getId()) ) {
+            dspContact( contact );
         }
         System.out.println( "***************************************" );
     }
 
     private static  void dspBookMenu() throws SQLException {
         int response;
-        boolean first = true;
         do {
             System.out.println("***************************************");
             System.out.println("*****************Menu******************");
             System.out.println("* 1 - Ajouter un carnet d'adresse     *");
             System.out.println("* 2 - Modifier un carnet d'adresse    *");
             System.out.println("* 3 - Gérer un carnet d'adresse       *");
-            System.out.println("* 4 - Quitter                         *");
+            System.out.println("* 4 - Supprimer un carnet d'adresse   *");
+            System.out.println("* 5 - Quitter                         *");
             System.out.println("***************************************");
             System.out.print("*Votre choix : ");
             try {
@@ -220,8 +224,7 @@ public class App {
             } finally {
                 sc.nextLine();
             }
-            first = false;
-        } while (1 > response || 4 < response);
+        } while (1 > response || 5 < response);
         switch (response) {
             case 1:
                 addBook();
@@ -235,7 +238,44 @@ public class App {
                 displayBook();
                 dspMainMenu();
                 break;
+            case 4:
+                removeBook();
+                dspBookMenu();
+                break;
+            case 5:
+                PersistenceManager.closeConnection();
+                break;
         }
+    }
+
+    private static void removeBook() throws SQLException {
+        System.out.println( "**********************************************" );
+        System.out.println( "************Suppression d'un carnet***********" );
+        Long id;
+        do {
+            List<Book> list = bookDAO.findAll();
+            System.out.println();
+            for(Book b : list){
+                System.out.println("ID du carnet : "+b.getId()+". Code du carnet : "+b.getCode());
+            }
+            System.out.println();
+            System.out.print("\nEntrer l'identifiant du carnet que vous voulez supprimer : ");
+            id = sc.nextLong();
+            sc.nextLine();
+            book = bookDAO.findById(id);
+            for(Contact contact : contactDAO.findByBookId(id)){
+                book.getContacts().put(contact.getId(),contact);
+            }
+        }while(book == null);
+        book.getContacts().forEach((key,contact) -> {
+            try {
+                contactDAO.remove(contact);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+        bookDAO.remove(book);
+
     }
 
     private static void displayBook() throws SQLException {
@@ -271,22 +311,19 @@ public class App {
                 System.out.println("ID du carnet : "+b.getId()+". Code du carnet : "+b.getCode());
             }
             System.out.println();
-            System.out.print("\nEntrer l'identifiant du carnet que vous voulez afficher : ");
+            System.out.print("\nEntrer l'identifiant du carnet que vous voulez modifier : ");
             id = sc.nextLong();
             sc.nextLine();
             book = bookDAO.findById(id);
         }while(book == null);
-        Book book = bookDAO.findById(id);
-        if ( null == book ) {
-            System.out.println( "Aucun contact trouvé avec cet identifiant ..." );
-        } else {
-            System.out.println("Veuillez saisir le nouveau code de ce carnet : ");
-            String code = sc.nextLine();
-            if ( !code.isEmpty() ) {
-                book.setCode(code);
-            }
-            bookDAO.update(book);
+        System.out
+            .print( "Entrer le code ('" + book.getCode() + "'; laisser vide pour ne pas mettre à jour) : " );
+        String code = sc.nextLine();
+        if ( !code.isEmpty() ) {
+            book.setCode(code);
         }
+        bookDAO.update(book);
+        System.out.println("Le carnet d'adresse a bien été mis à jour ...");
     }
 
 
@@ -371,11 +408,13 @@ public class App {
         System.out.println("* 1 - En XML");
         System.out.println("* 2 - En CSV");
         System.out.print("*Votre choix : ");
-        int response = -1;
+        int response;
         try {
             response = sc.nextInt();
         }
-        catch ( InputMismatchException ignored) {}
+        catch ( InputMismatchException e) {
+            response = -1;
+        }
         finally {
             sc.nextLine();
         }
